@@ -4,16 +4,17 @@ using UnityEngine;
 
 public class PlayerController : MonoBehaviour
 {
-    //Частные переменные
-    private float speed = 10.0f;
-    private float turnSpeed = 45.0f;
-    private float horizontalInput;
-    private float forwardInput;
-    public Camera mainCamera;
-    public Camera hoodCamera;
-    public KeyCode switchKey;
+    //Переменная ввода игрока с клавиатуры
+    public float horizontalInput;
+    //Скорость передвижения игрока
+    public float speed = 10.0f;
+    //Диапазон за , котрый не может выйти игрок 
+    public float xRange = 10.0f;
+    public float zRange = 1.5f;
+    public float forwardInput;
+    //Ссылка на пиццу, котрую мы мы будем кормить животных
+    public GameObject projectilePrefab;
 
-    // Start is called before the first frame update
     void Start()
     {
         
@@ -22,19 +23,31 @@ public class PlayerController : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        //Вот где мы получаем информацию от игрока
-        horizontalInput = Input.GetAxis("Horizontal");
-        forwardInput = Input.GetAxis("Vertical");
-
-        //Мы двигаем транспортное средство вперед
-        transform.Translate(Vector3.forward * Time.deltaTime * speed * forwardInput);
-        //Мы поворачиваем транспортное средство
-        transform.Rotate(Vector3.up, turnSpeed * horizontalInput * Time.deltaTime);
-        if (Input.GetKeyDown(switchKey))
+        //Устанавливаем границы, чтоб игрок не мог выйти за их пределы
+        if(transform.position.x < -xRange)
         {
-            mainCamera.enabled = !mainCamera.enabled;
-            hoodCamera.enabled = !hoodCamera.enabled;
+            transform.position = new Vector3(-xRange, transform.position.y, transform.position.z);
+        }else if(transform.position.z < -zRange) 
+        {
+            transform.position = new Vector3(transform.position.x, transform.position.y, -zRange);
         }
-
+        if (transform.position.x > xRange && transform.position.z > zRange)
+        {
+            transform.position = new Vector3(xRange, transform.position.y, zRange);
+        }
+        else if (transform.position.z > zRange)
+        {
+            transform.position = new Vector3(transform.position.x, transform.position.y, zRange);
+        }
+        //Движение игрока по оси Х
+        horizontalInput = Input.GetAxis("Horizontal");
+        transform.Translate(Vector3.right * horizontalInput * Time.deltaTime * speed);
+        forwardInput = Input.GetAxis("Vertical");
+        transform.Translate(Vector3.forward *  forwardInput * Time.deltaTime * speed);
+        if (Input.GetKeyDown(KeyCode.Space))
+        {
+            //Запустите снаряд от игрока
+            Instantiate(projectilePrefab, transform.position, projectilePrefab.transform.rotation);
+        }
     }
 }
